@@ -12,13 +12,23 @@ const App = () => {
   // Function to refresh the list of notes
   const refreshNotes = async () => {
     try {
-      const res = await fetch(API_URL + "api/todoapp/GetNotes");
+      const res = await fetch(`${API_URL}/api/todoapp/GetNotes`);
+      console.log("Response status:", res.status); // Log the response status
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       const data = await res.json();
-      setNotes(data);
+      console.log("Fetched data:", data); // Log the fetched data
+      setNotes(data); // Update state with fetched notes
     } catch (error) {
       console.error("Failed to fetch notes:", error);
     }
   };
+
+  // Fetch notes on component mount
+  useEffect(() => {
+    refreshNotes();
+  }, []);
 
   // Function to add a new note
   const addClick = async () => {
