@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 const App = () => {
   const [notes, setNotes] = useState([]); // State for storing notes
-  const API_URL = "http://localhost:5030/";
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // Fetch notes when the component is mounted
   useEffect(() => {
