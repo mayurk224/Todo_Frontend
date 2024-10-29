@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 const App = () => {
   const [notes, setNotes] = useState([]); // State for storing notes
   const [newNote, setNewNote] = useState(""); // State for new note input
-  const API_URL = "http://localhost:5030";
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // Fetch notes from the server
   const fetchNotes = async () => {
