@@ -2,57 +2,49 @@ import React, { useState, useEffect } from "react";
 
 const App = () => {
   const [notes, setNotes] = useState([]); // State for storing notes
-  const API_URL = import.meta.env.VITE_API_URL;
+  const [newNote, setNewNote] = useState(""); // State for new note input
+  const API_URL = "http://localhost:5030";
 
-  // Fetch notes when the component is mounted
-  useEffect(() => {
-    refreshNotes();
-  }, []);
-
-  // Function to refresh the list of notes
-  const refreshNotes = async () => {
+  // Fetch notes from the server
+  const fetchNotes = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/todoapp/GetNotes`);
-      console.log("Response status:", res.status); // Log the response status
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+      const response = await fetch(`${API_URL}/api/todoapp/GetNotes`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await res.json();
-      console.log("Fetched data:", data); // Log the fetched data
-      setNotes(data); // Update state with fetched notes
+      const data = await response.json();
+      setNotes(data);
     } catch (error) {
       console.error("Failed to fetch notes:", error);
     }
   };
 
-  // Fetch notes on component mount
+  // useEffect to call fetchNotes when the component mounts
   useEffect(() => {
-    refreshNotes();
+    fetchNotes();
   }, []);
 
   // Function to add a new note
-  const addClick = async () => {
+  const addNote = async () => {
+    if (!newNote.trim()) {
+      alert("Please enter a note before submitting.");
+      return;
+    }
+
     try {
-      const newNotes = document.getElementById("newNotes").value.trim(); // Get the input value and trim whitespace
-
-      // Check if newNotes is empty
-      if (!newNotes) {
-        alert("Please enter a note before submitting.");
-        return; // Exit the function early
-      }
-
-      const response = await fetch(API_URL + "api/todoapp/AddNotes", {
+      const response = await fetch(`${API_URL}/api/todoapp/AddNotes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ newNotes }), // Send new note as JSON
+        body: JSON.stringify({ newNotes: newNote.trim() }),
       });
 
-      const result = await response.json(); // Parse the response
+      const result = await response.json();
 
       if (response.ok) {
-        refreshNotes(); // Refresh notes after adding
+        setNewNote(""); // Clear input after successful addition
+        fetchNotes(); // Refresh notes after adding
       } else {
         alert(result.error || "Failed to add note");
       }
@@ -63,20 +55,20 @@ const App = () => {
   };
 
   // Function to delete a note
-  const deleteClick = async (id) => {
+  const deleteNote = async (id) => {
     try {
       const response = await fetch(
-        `${API_URL}api/todoapp/DeleteNotes?id=${id}`,
+        `${API_URL}/api/todoapp/DeleteNotes?id=${id}`,
         {
           method: "DELETE",
         }
       );
 
-      const result = await response.json(); // Parse the response
+      const result = await response.json();
 
       if (response.ok) {
         alert(result.message || "Note deleted successfully");
-        refreshNotes(); // Refresh notes after deletion
+        fetchNotes(); // Refresh notes after deletion
       } else {
         alert(result.error || "Failed to delete note");
       }
@@ -96,12 +88,13 @@ const App = () => {
         <div className="flex space-x-2 mb-4">
           <input
             type="text"
-            id="newNotes"
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)} // Update state on input change
             placeholder="Add a new note"
             className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
           <button
-            onClick={addClick}
+            onClick={addNote}
             className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md"
           >
             Add
@@ -116,13 +109,11 @@ const App = () => {
             >
               <p className="text-gray-700">
                 <b>
-                  {note.id}
-                  {"."}
-                  {note.description}
+                  {note.id}. {note.description}
                 </b>
               </p>
               <button
-                onClick={() => deleteClick(note.id)}
+                onClick={() => deleteNote(note.id)} // Use MongoDB's _id for deletion
                 className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md"
               >
                 Delete
